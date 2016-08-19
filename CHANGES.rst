@@ -4,6 +4,10 @@ Change History
 2.5.3 (unreleased)
 ==================
 
+- In the tests, when the ``TERM`` environment variable exists and is
+  ``xterm`` or a variant, set it to ``dumb`` instead.  This avoids
+  invisible control characters popping up.  [maurits]
+
 - Removed Python 2.6 and 3.2 support.
   [do3cc]
 
