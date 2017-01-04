@@ -175,6 +175,19 @@ class Buildout(DictMixin):
 
         __doing__ = 'Initializing.'
 
+        # TODO Is this the best way to determine whether we are in a
+        # virtualenv?
+        venv = os.environ.get('VIRTUAL_ENV')
+        if not venv:
+            raise zc.buildout.UserError("Must be in virtualenv.")
+        if not os.path.isdir(venv):
+            raise zc.buildout.UserError(
+                "VIRTUAL_ENV is not a directory. Got {}.".format(venv))
+        if os.getcwd() != venv:
+            # TODO This may be fine, I am just being cautious for now.
+            raise zc.buildout.UserError(
+                "VIRTUAL_ENV {} is not current directory.".format(venv))
+
         # default options
         data = dict(buildout=_buildout_default_options.copy())
         self._buildout_dir = os.getcwd()
@@ -200,6 +213,11 @@ class Buildout(DictMixin):
             if config_file:
                 data['buildout']['directory'] = (os.path.dirname(config_file),
                     'COMPUTED_VALUE')
+                if os.path.dirname(config_file) != venv:
+                    # TODO This may be fine, I am just being cautious for now.
+                    raise zc.buildout.UserError(
+                        "Config file {} is not in VIRTUAL_ENV {}.".format(
+                            config_file, venv))
         else:
             base = None
 
