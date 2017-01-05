@@ -110,14 +110,20 @@ def install(specs,
         )
 
         # It fails without a build directory.
-        build_dir_name = 'build'
-        build_dir_name = None
-        with BuildDirectory(build_dir_name) as build_dir:
+        # build_dir_path = 'build' gives problems.
+        # With None, a temporary directory is created.
+        build_dir_path = None
+        with BuildDirectory(build_dir_path) as build_dir:
+
+            # Also, in some cases you can go without a src_dir, and in other
+            # cases it fails when passing None.
+            # Let's do download_dir too.
+            # The dirs need to exist already.
 
             requirement_set = RequirementSet(
                 build_dir=build_dir,
-                src_dir=None,
-                download_dir=None,
+                src_dir='src',
+                download_dir='download',
                 session=session,
                 wheel_cache=wheel_cache,
             )
@@ -127,8 +133,30 @@ def install(specs,
             # Get version constraints.
             if versions is not None:
                 for name, version in versions.items():
+                    # TODO: we may want to get the buildout['develop'] lines
+                    # separately and call InstallRequirement.from_editable
+                    # instead.
+                    editable = True if 'dev' in version else False
+                    if editable:
+                        # This just causes too many problems currently, using a
+                        # zc.buildout dev release, which it then tries to find
+                        # on PyPI.
+                        logger.warn(
+                            'Ignoring editable constraint %s = %s',
+                            name, version)
+                        continue
+                    # Collecting zc.recipe.egg==>=2.0.0a3 fails for me, even
+                    # when it is already installed as dev version.  Pip says it
+                    # can't find it in a list that does actually contain it...
+                    if '>=' in version:
+                        logger.warn(
+                            'Ignoring ">=" constraint %s = %s',
+                            name, version)
+                        continue
                     req = InstallRequirement.from_line(
-                        '{} == {}'.format(name, version), constraint=True)
+                        '{} == {}'.format(name, version),
+                        constraint=True)
+                    # req.editable = editable
                     requirement_set.add_requirement(req)
             # Get requirements.
             for spec in specs:
