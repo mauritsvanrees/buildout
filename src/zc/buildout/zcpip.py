@@ -12,6 +12,7 @@ from pip.wheel import WheelCache
 
 import logging
 import operator
+import os
 
 
 logger = logging.getLogger('zc.buildout.zcpip')
@@ -119,11 +120,17 @@ def install(specs,
             # cases it fails when passing None.
             # Let's do download_dir too.
             # The dirs need to exist already.
+            src_dir = 'src'
+            download_dir = 'download'
+            for folder in (src_dir, download_dir):
+                if not os.path.exists(folder):
+                    os.mkdir(folder)
+                    logger.info('Created directory %s', folder)
 
             requirement_set = RequirementSet(
                 build_dir=build_dir,
-                src_dir='src',
-                download_dir='download',
+                src_dir=src_dir,
+                download_dir=download_dir,
                 session=session,
                 wheel_cache=wheel_cache,
             )
