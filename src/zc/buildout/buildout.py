@@ -965,6 +965,8 @@ class Buildout(DictMixin):
             links = self['buildout'].get('find-links', '').split(),
             index = self['buildout'].get('index'),
             path = [self['buildout']['develop-eggs-directory']],
+            # TODO: this does not handle packages under development yet.
+            # versions=self['versions'],
             allow_hosts = self._allow_hosts
             )
 
@@ -1047,6 +1049,7 @@ class Buildout(DictMixin):
                 working_set=pkg_resources.working_set,
                 links = self['buildout'].get('find-links', '').split(),
                 index = self['buildout'].get('index'),
+                versions=self['buildout']['versions'],
                 newest=self.newest, allow_hosts=self._allow_hosts)
 
             # Clear cache because extensions might now let us read pages we
@@ -1213,6 +1216,7 @@ def _install_and_load(spec, group, entry, buildout):
                 index=buildout_options.get('index'),
                 path=path,
                 working_set=pkg_resources.working_set,
+                versions=buildout['versions'],
                 newest=buildout.newest,
                 allow_hosts=buildout._allow_hosts
                 )

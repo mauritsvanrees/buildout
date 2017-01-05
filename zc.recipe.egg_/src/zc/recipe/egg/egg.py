@@ -80,6 +80,7 @@ class Eggs(object):
                 links=self.links,
                 index=self.index,
                 path=[options['develop-eggs-directory']],
+                versions=self.buildout['versions'],
                 newest=self.buildout['buildout'].get('newest') == 'true',
                 allow_hosts=self.allow_hosts)
 
