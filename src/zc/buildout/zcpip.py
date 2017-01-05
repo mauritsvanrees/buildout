@@ -1,3 +1,4 @@
+from pip._vendor.packaging.utils import canonicalize_name
 from pip.download import PipSession
 from pip.index import FormatControl
 from pip.index import PackageFinder
@@ -18,6 +19,24 @@ logger = logging.getLogger('zc.buildout.zcpip')
 # pip._vendor.distlib.index.DEFAULT_INDEX = 'https://pypi.python.org/pypi'
 # But that should be 'simple'.  Or we get it from buildout.
 DEFAULT_INDEX = 'https://pypi.python.org/simple'
+
+# FormatControl is a namedtuple with no_binary and only_binary.  In no_binary
+# we should put package names that are known to fail when installed as wheels.
+# For example, 'pip install zc.recipe.egg' gives an error:
+# 'zc.recipe.egg is in an unsupported or invalid wheel'
+#
+# We probably want to do this differently, for example for each spec try to
+# install as wheel, and if it fails try as source distribution.  But for the
+# moment we can hardcode this.
+STANDARD_FORMAT_CONTROL = FormatControl(set(), set())
+BUILDOUT_FORMAT_CONTROL = FormatControl(
+    set([canonicalize_name('zc.recipe.egg')]), set())
+# Alternatively:
+# from pip.index import fmt_ctl_handle_mutual_exclude
+# fmt_ctl_handle_mutual_exclude(
+#     'zc.recipe.egg',
+#     STANDARD_FORMAT_CONTROL.no_binary,
+#     STANDARD_FORMAT_CONTROL.only_binary)
 
 
 def _build_session(cache=None, retries=None, insecure_hosts=None):
@@ -40,7 +59,7 @@ def _build_package_finder(session):
         find_links=[],
         index_urls=[DEFAULT_INDEX],
         session=session,
-        format_control=FormatControl(set(), set()),
+        format_control=BUILDOUT_FORMAT_CONTROL,
     )
 
 
@@ -63,6 +82,21 @@ def install(specs,
       UnsupportedWheel: zc.recipe.egg is in an unsupported or invalid wheel.
       It *does* download the tar.gz file.
 
+    Ah, on the command line this fails:
+
+      pip install  zc.recipe.egg
+
+    and this works:
+
+      pip install --no-binary zc.recipe.egg zc.recipe.egg
+
+    We can do the same with format_control.  Done.
+    But: you do get an error after zc.recipe egg is installed.
+    Getting the entry point fails with:
+
+    ImportError: No module named recipe.egg
+
+    When you run buildout again, it works.
     """
 
     with _build_session() as session:
@@ -72,7 +106,7 @@ def install(specs,
         cache_dir = 'wheel-cache'
         wheel_cache = WheelCache(
             cache_dir=cache_dir,
-            format_control=FormatControl(set(), set()),
+            format_control=BUILDOUT_FORMAT_CONTROL,
         )
 
         # It fails without a build directory.
@@ -116,9 +150,13 @@ def install(specs,
             # installed from the sdist/vcs whatever.
             wb.build(autobuilding=True)
 
-            # Install the requirements.
-            # TODO: This is where it fails for zc.recipe.egg.
-            requirement_set.install(install_options=None)
+            # Install the requirements.  This is where it fails for
+            # zc.recipe.egg when installing as wheel.
+            # XXX In req_set.py these lines can easily fail because
+            # they may be trying to add a tuple and a list:
+            # global_options += self.options.get('global_options', [])
+            # install_options += self.options.get('install_options', [])
+            requirement_set.install(install_options=[], global_options=[])
 
             possible_lib_locations = _get_lib_location_guesses()
 

@@ -35,6 +35,7 @@ import subprocess
 import sys
 import tempfile
 import zc.buildout
+import zc.buildout.zcpip
 import warnings
 
 warnings.filterwarnings(
