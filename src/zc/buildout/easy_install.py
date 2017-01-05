@@ -848,6 +848,12 @@ def install(specs, dest,
             include_site_packages=None,
             allowed_eggs_from_site_packages=None,
             ):
+    # TODO: only support pip.
+    try:
+        zc.buildout.zcpip.install(specs, versions)
+    except:
+        logger.exception('pip failed')
+
     assert executable == sys.executable, (executable, sys.executable)
     assert include_site_packages is None
     assert allowed_eggs_from_site_packages is None
