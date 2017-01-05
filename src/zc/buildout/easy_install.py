@@ -853,7 +853,11 @@ def install(specs, dest,
     try:
         zc.buildout.zcpip.install(specs, versions)
     except:
-        logger.exception('pip failed')
+        logger.error('pip failed to install %s', specs)
+        # logger.exception('pip failed')
+        raise
+    if True:
+        logger.info('Called pip, not calling easy_install.')
 
     assert executable == sys.executable, (executable, sys.executable)
     assert include_site_packages is None
