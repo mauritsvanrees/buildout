@@ -851,7 +851,8 @@ def install(specs, dest,
             ):
     # TODO: only support pip.
     try:
-        zc.buildout.zcpip.install(specs, versions)
+        # zc.buildout.zcpip.install(specs, versions)
+        zc.buildout.zcpip.pip_main(specs, versions)
     except:
         logger.error('pip failed to install %s', specs)
         # logger.exception('pip failed')
