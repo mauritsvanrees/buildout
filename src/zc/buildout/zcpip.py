@@ -219,7 +219,7 @@ def pip_main(specs, versions):
 
         # Constrain versions using the given constraints file.
         pip_args.extend(['--constraint', constraints_file.name])
-        # Add the requiremed specifications.
+        # Add the required specifications.
         pip_args.extend(specs)
         try:
             cmd_name, cmd_args = parseopts(pip_args)
